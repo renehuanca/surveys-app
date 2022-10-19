@@ -39,6 +39,20 @@ if (route.params.id) {
     Object.assign(model, source)
 }
 
+function onImageChoose(evt: Event) {
+    const file = evt.target
+
+    const reader = new FileReader()
+    reader.onload = () => {
+        // The field on send on backend
+        model.value.image = reader.result
+
+        // The field to display here
+        model.value.image_url = reader.result
+    }
+    reader.readAsDataURL(file)
+}
+
 function addQuestion(index: any) {
     const newQuestion = {
         id: uuidv4(),
@@ -118,6 +132,7 @@ function saveSurvey() {
                                 <button type="button"
                                 class="relative overflow-hidden ml-5 bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     <input type="file"
+                                    @change="onImageChoose"
                                     class="absolute left-0 top-0 right-0 bottom-0 opacity-0 cursor-pointer">
                                     Change
                                 </button>
