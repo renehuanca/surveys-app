@@ -1,10 +1,9 @@
-import { createRouter, createWebHistory, Router, RouteRecordRaw } from "vue-router";
-
 import DefaultLayout from './components/DefaultLayout.vue'
 import AuthLayout from './components/AuthLayout.vue'
 import Dashboard from './views/Dashboard.vue'
 import Surveys from './views/Surveys.vue'
 import SurveyView from './views/SurveyView.vue'
+import SurveyPublicView from './views/SurveyPublicView.vue'
 import Login from './views/Login.vue'
 import Register from './views/Register.vue'
 import { useUserStore } from './stores/user'
@@ -39,11 +38,16 @@ const routes: RouteRecordRaw[] = [
         ]
     },
     {
+        path: '/view/survey/:slug',
+        name: 'SurveyPublicView',
+        component: SurveyPublicView,
+    },
+    {
         path: '/auth',
         name: 'Auth',
         redirect: '/login',
         component: AuthLayout,
-        meta: {isGuest: true}, 
+        meta: {isGuest: true},
         children: [
             {
                 path: '/login',

@@ -5,6 +5,6 @@ import PageComponent from '../components/PageComponent.vue';
 
 <template>
   <PageComponent title="Dashboard">
-    Content goes here 
+    Content goes here
   </PageComponent>
 </template>

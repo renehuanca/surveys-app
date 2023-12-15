@@ -1,46 +1,59 @@
 <script setup lang="ts">
-import { PlusIcon } from '@heroicons/vue/outline';
-import { ref } from 'vue';
+import { PlusIcon, TrashIcon } from '@heroicons/vue/outline';
+import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import QuestionEditor from '../components/editor/QuestionEditor.vue';
 import PageComponent from '../components/PageComponent.vue';
-import { useUserStore } from '../stores/user';
+import { useSurveyStore } from '../stores/survey';
 import { v4 as uuidv4 } from 'uuid'
+import { useNotificationStore } from '../stores/notification';
 
 const route = useRoute()
 
-interface Survey {
+const surveyLoading = computed(() => useSurveyStore().currentSurvey.loading)
+
+interface Model {
     id: null;
     title: string;
-    status: boolean;
+    status: boolean | string;
     description: undefined;
-    image: null;
+    image: string | ArrayBuffer | null;
+    image_url: string | ArrayBuffer | null
     expire_date: null;
-    questions: {
-        id: string;
-    }[];
+    questions: never[] | any;
 }
-const model = ref({
+
+const model = ref<Model>({
     id: null,
     title: '',
     status: false,
     description: undefined,
-    image: null,
+    image: '',
+    image_url: '',
     expire_date: null,
     questions: []
 })
 
-const userStore = useUserStore()
+const surveyStore = useSurveyStore()
+
+watch(
+    () => surveyStore.currentSurvey.data,
+    (newVal: any, oldVal: any) => {
+        if (newVal) {
+            model.value = {
+                ...JSON.parse(JSON.stringify(newVal)),
+                status: newVal.status !== 'draft'
+            }
+        }
+    }
+)
+
 if (route.params.id) {
-    const source = userStore.surveys.find((survey: any) => {
-        console.log(route.params.id)
-        return survey.id == route.params.id // add parse int route params id
-    })
-    Object.assign(model, source)
+    surveyStore.getSurvey(route.params.id);
 }
 
-function onImageChoose(evt: Event) {
-    const file = evt.target
+function onImageChoose(evt: any) {
+    const file = evt.target.files[0]
 
     const reader = new FileReader()
     reader.onload = () => {
@@ -85,30 +98,52 @@ const router = useRouter();
 
 // Create or update Survey
 function saveSurvey() {
-    userStore.saveSurvey(model.value)
+    surveyStore.saveSurvey(model.value)
         .then(({data}) => {
+            const notificationStore = useNotificationStore()
+            notificationStore.notify('Survey was successfully updated', 'success')
             router.push({
                 name: 'SurveyView',
                 params: {id: data.data.id}
             })
         })
         .catch(err => {
-            console.log(err.response.data.message)
+            console.log(err)
         })
 }
+
+function deleteSurvey() {
+    if (confirm(`Are you sure want to delete this survey? Operation cant be undone!!.`)) {
+        surveyStore.deleteSurvey(model.value.id)
+            .then(res => {
+                router.push({name: 'Surveys'})
+            })
+    }
+}
+
 </script>
 
 <template>
     <PageComponent>
         <template v-slot:header>
-            <div class="flex items-center justify between">
+            <div class="flex items-center justify-between">
                 <h1 class="text-3xl font-bold text-gray-900">
-                    {{  model.id ? model.title : "Create a Survey"  }}
+                    {{  route.params.id !== null ? model.title : "Create a Survey"  }}
                 </h1>
+
+                <button
+                    v-if="route.params.id && !surveyLoading"
+                    @click="deleteSurvey"
+                    class="py-2 px-3 text-white bg-red-500 rounded-md hover:bg-red-700"
+                >
+                    <TrashIcon class="h-5 w-5 -mt-1 inline-block"></TrashIcon>
+                    Delete Survey
+                </button>
             </div>
         </template>
 
-        <form @submit.prevent="saveSurvey">
+        <div v-if="surveyLoading" class="flex justify-center ">Loading...</div>
+        <form v-else @submit.prevent="saveSurvey" class="animate-fade-in-down">
             <div class="shadow sm:rounded-md sm:overflow-hidden">
                 <!-- Survey Fields -->
                 <div class="px-4 py-5 bg-white space-y-6 sm:p-6">
@@ -118,7 +153,7 @@ function saveSurvey() {
                             Image
                         </label>
                         <div class="mt-1 flex item-center">
-                            <img v-if="model.image" :src="model.image" :alt="model.title"
+                            <img v-if="model.image_url" :src="model.image_url" :alt="model.title"
                                 class="w-64 h-48 object-cover rounded-md shadow-md">
                             <span v-else
                                 class="flex items-center justify-center h-12 w-12 rounded-full overflow-hidden bg-gray-100">
@@ -137,7 +172,7 @@ function saveSurvey() {
                                     Change
                                 </button>
                             </div>
-                            
+
                         </div>
                     </div>
                     <!--/ Image -->
