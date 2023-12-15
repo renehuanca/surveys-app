@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { PlusIcon, TrashIcon } from '@heroicons/vue/outline';
-import { useUserStore } from '../../stores/user';
 import { v4 as uuidv4 } from 'uuid'
+import { useQuestionStore } from '../../stores/question';
 
 interface Props {
     question: object
@@ -11,13 +11,13 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const emit = defineEmits(['change', 'addChange', 'deleteQuestion'])
+const emit = defineEmits(['change', 'addChange', 'deleteQuestion', 'addQuestion'])
 
 const model = ref(JSON.parse(JSON.stringify(props.question)));
 
-const user = useUserStore()
+const questionStore = useQuestionStore()
 
-const questionTypes = computed(() => user.questionTypes)
+const questionTypes = computed(() => questionStore.questionTypes)
 
 function upperCaseFirst(str: string) {
     return str.charAt(0).toUpperCase() + str.slice(1)

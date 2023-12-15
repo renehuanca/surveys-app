@@ -11,6 +11,7 @@ import {
 import { UserCircleIcon, MenuIcon, XIcon } from "@heroicons/vue/outline";
 import { useUserStore } from "../stores/user";
 import { useRouter } from 'vue-router'
+import Notification from "./Notification.vue";
 
 const navigation = [
   { name: "Dashboard", to: { name: "Dashboard" }},
@@ -158,5 +159,7 @@ function logout() {
     </Disclosure>
 
     <router-view></router-view>
+
+    <Notification />
   </div>
 </template>
